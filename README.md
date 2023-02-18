@@ -1,4 +1,4 @@
 # Random Color Palette Generator
-Generate Ranndom Colors,
+Generate Random Colors!
 
 Refered YT video by Tyler Potts.
