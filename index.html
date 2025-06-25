@@ -1,63 +1,71 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-	<meta charset="UTF-8">
-	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Colour Palette Generator</title>
-
-	<link rel="stylesheet" href="/style.css" />
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Color Palette Generator</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-	
-	<main>
-		<h1>Colour Palette</h1>
-		<p>
-			Press [<button class="generator-button">Space</button>] to generate a new palette
-		</p>
-		
-		<h4>Generator</h4>
-
-		<div class="colours">
-			<div class="colour">
-				<button class="lock-toggle">
-					<img src="icons/lock-open.svg" />
-				</button>
-				
-				<input type="text" class="colour-input" value="#000000" />
-
-				<button class="copy-hex">Copy</button>
-			</div>
-			<div class="colour">
-				<button class="lock-toggle">
-					<img src="icons/lock-open.svg" />
-				</button>
-				
-				<input type="text" class="colour-input" value="#000000" />
-
-				<button class="copy-hex">Copy</button>
-			</div>
-			<div class="colour">
-				<button class="lock-toggle">
-					<img src="icons/lock-open.svg" />
-				</button>
-				
-				<input type="text" class="colour-input" value="#000000" />
-
-				<button class="copy-hex">Copy</button>
-			</div>
-			<div class="colour">
-				<button class="lock-toggle">
-					<img src="icons/lock-open.svg" />
-				</button>
-				
-				<input type="text" class="colour-input" value="#000000" />
-
-				<button class="copy-hex">Copy</button>
-			</div>
-		</div>
-	</main>
-
-	<script src="main.js"></script>
+  <main>
+    <h1>Color Palette Generator</h1>
+    <p>
+      Press <kbd>Space</kbd> or <button class="generator-button" aria-label="Generate new palette">Generate</button> to create a new palette.
+    </p>
+    <div class="color-mode-selector">
+      <label for="color-mode">Color Harmony:</label>
+      <select id="color-mode" aria-label="Select color harmony mode">
+        <option value="random">Random</option>
+        <option value="complementary">Complementary</option>
+        <option value="analogous">Analogous</option>
+        <option value="split-complementary">Split Complementary</option>
+        <option value="monochromatic">Monochromatic</option>
+        <option value="triadic">Triadic</option>
+        <option value="compound">Compound</option>
+        <option value="shades">Shades</option>
+      </select>
+    </div>
+    <section class="palette" aria-label="Color palette">
+      <div class="colours">
+        <div class="colour" tabindex="0">
+          <button class="lock-toggle" aria-label="Lock color" title="Lock/Unlock color">
+            <img src="icons/lock-open.svg" alt="Lock/Unlock" />
+          </button>
+          <input type="text" class="colour-input" value="#000000" maxlength="7" aria-label="Color hex code" />
+          <button class="copy-hex" aria-label="Copy hex code">Copy</button>
+          <span class="lock-status" aria-live="polite"></span>
+        </div>
+        <div class="colour" tabindex="0">
+          <button class="lock-toggle" aria-label="Lock color" title="Lock/Unlock color">
+            <img src="icons/lock-open.svg" alt="Lock/Unlock" />
+          </button>
+          <input type="text" class="colour-input" value="#000000" maxlength="7" aria-label="Color hex code" />
+          <button class="copy-hex" aria-label="Copy hex code">Copy</button>
+          <span class="lock-status" aria-live="polite"></span>
+        </div>
+        <div class="colour" tabindex="0">
+          <button class="lock-toggle" aria-label="Lock color" title="Lock/Unlock color">
+            <img src="icons/lock-open.svg" alt="Lock/Unlock" />
+          </button>
+          <input type="text" class="colour-input" value="#000000" maxlength="7" aria-label="Color hex code" />
+          <button class="copy-hex" aria-label="Copy hex code">Copy</button>
+          <span class="lock-status" aria-live="polite"></span>
+        </div>
+        <div class="colour" tabindex="0">
+          <button class="lock-toggle" aria-label="Lock color" title="Lock/Unlock color">
+            <img src="icons/lock-open.svg" alt="Lock/Unlock" />
+          </button>
+          <input type="text" class="colour-input" value="#000000" maxlength="7" aria-label="Color hex code" />
+          <button class="copy-hex" aria-label="Copy hex code">Copy</button>
+          <span class="lock-status" aria-live="polite"></span>
+        </div>
+      </div>
+    </section>
+  </main>
+  <footer>
+    <small>Made with <span aria-label="love">❤️</span> | <a href="https://github.com/">GitHub</a></small>
+  </footer>
+  <script src="script.js"></script>
 </body>
 </html>
