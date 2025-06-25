@@ -106,6 +106,11 @@ class Colour {
 
 class ColorHarmony {
   static hslToHex(h, s, l) {
+    // Normalize values
+    h = ((h % 360) + 360) % 360; // Ensure h is between 0-360
+    s = Math.max(0, Math.min(100, s)); // Clamp s between 0-100
+    l = Math.max(0, Math.min(100, l)); // Clamp l between 0-100
+    
     l /= 100;
     const a = s * Math.min(l, 1 - l) / 100;
     const f = n => {
@@ -117,16 +122,19 @@ class ColorHarmony {
   }
 
   static hexToHsl(hex) {
-    const r = parseInt(hex.slice(1, 3), 16) / 255;
-    const g = parseInt(hex.slice(3, 5), 16) / 255;
-    const b = parseInt(hex.slice(5, 7), 16) / 255;
+    // Remove # if present
+    hex = hex.replace('#', '');
+    
+    const r = parseInt(hex.slice(0, 2), 16) / 255;
+    const g = parseInt(hex.slice(2, 4), 16) / 255;
+    const b = parseInt(hex.slice(4, 6), 16) / 255;
 
     const max = Math.max(r, g, b);
     const min = Math.min(r, g, b);
     let h, s, l = (max + min) / 2;
 
     if (max === min) {
-      h = s = 0;
+      h = s = 0; // achromatic
     } else {
       const d = max - min;
       s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
@@ -138,76 +146,86 @@ class ColorHarmony {
       h /= 6;
     }
 
-    return [h * 360, s * 100, l * 100];
+    return [Math.round(h * 360), Math.round(s * 100), Math.round(l * 100)];
   }
 
   static generateComplementary(baseHex) {
     const [h, s, l] = this.hexToHsl(baseHex);
+    const complementHue = (h + 180) % 360;
+    
     return [
       baseHex,
-      this.hslToHex((h + 180) % 360, s, l),
-      this.hslToHex(h, Math.max(20, s - 20), Math.max(20, l - 10)),
-      this.hslToHex((h + 180) % 360, Math.max(20, s - 20), Math.max(20, l - 10))
+      this.hslToHex(complementHue, s, l),
+      this.hslToHex(h, Math.max(30, s - 15), Math.min(80, l + 10)),
+      this.hslToHex(complementHue, Math.max(30, s - 15), Math.min(80, l + 10))
     ];
   }
 
   static generateAnalogous(baseHex) {
     const [h, s, l] = this.hexToHsl(baseHex);
+    
     return [
       this.hslToHex((h - 30 + 360) % 360, s, l),
       this.hslToHex((h - 15 + 360) % 360, s, l),
       baseHex,
-      this.hslToHex((h + 15) % 360, s, l)
+      this.hslToHex((h + 30) % 360, s, l)
     ];
   }
 
   static generateSplitComplementary(baseHex) {
     const [h, s, l] = this.hexToHsl(baseHex);
+    const complement = (h + 180) % 360;
+    
     return [
       baseHex,
-      this.hslToHex((h + 150) % 360, s, l),
-      this.hslToHex((h + 210) % 360, s, l),
-      this.hslToHex(h, Math.max(20, s - 15), Math.max(20, l - 10))
+      this.hslToHex((complement - 30 + 360) % 360, s, l),
+      this.hslToHex((complement + 30) % 360, s, l),
+      this.hslToHex(h, Math.max(20, s - 20), Math.max(20, l - 15))
     ];
   }
 
   static generateMonochromatic(baseHex) {
     const [h, s, l] = this.hexToHsl(baseHex);
+    
     return [
-      this.hslToHex(h, s, Math.min(90, l + 20)),
-      this.hslToHex(h, s, Math.min(80, l + 10)),
+      this.hslToHex(h, s, Math.min(85, l + 25)),
+      this.hslToHex(h, s, Math.min(75, l + 15)),
       baseHex,
-      this.hslToHex(h, s, Math.max(10, l - 15))
+      this.hslToHex(h, s, Math.max(15, l - 20))
     ];
   }
 
   static generateTriadic(baseHex) {
     const [h, s, l] = this.hexToHsl(baseHex);
+    
     return [
       baseHex,
       this.hslToHex((h + 120) % 360, s, l),
       this.hslToHex((h + 240) % 360, s, l),
-      this.hslToHex(h, Math.max(20, s - 20), Math.max(20, l - 10))
+      this.hslToHex(h, Math.max(25, s - 15), Math.max(25, l - 10))
     ];
   }
 
   static generateCompound(baseHex) {
     const [h, s, l] = this.hexToHsl(baseHex);
+    const complement = (h + 180) % 360;
+    
     return [
       baseHex,
       this.hslToHex((h + 30) % 360, s, l),
-      this.hslToHex((h + 180) % 360, s, l),
-      this.hslToHex((h + 210) % 360, s, l)
+      this.hslToHex(complement, s, l),
+      this.hslToHex((complement + 30) % 360, s, l)
     ];
   }
 
   static generateShades(baseHex) {
     const [h, s, l] = this.hexToHsl(baseHex);
+    
     return [
-      this.hslToHex(h, s, Math.min(90, l + 30)),
-      this.hslToHex(h, s, Math.min(80, l + 15)),
+      this.hslToHex(h, s, Math.min(90, l + 35)),
+      this.hslToHex(h, s, Math.min(80, l + 20)),
       baseHex,
-      this.hslToHex(h, s, Math.max(10, l - 20))
+      this.hslToHex(h, s, Math.max(10, l - 25))
     ];
   }
 }
@@ -229,41 +247,60 @@ function generatePalette() {
     } else {
       // Find the first unlocked color or generate a base color
       let baseColor = colours.find(c => !c.locked)?.hex;
-      if (!baseColor) {
-        baseColor = '#' + Array.from({length:6},()=>Math.floor(Math.random()*16).toString(16)).join('').toUpperCase();
+      if (!baseColor || !/^#[0-9A-Fa-f]{6}$/.test(baseColor)) {
+        // Generate a vibrant base color with good saturation and lightness
+        const baseHue = Math.floor(Math.random() * 360);
+        const baseSat = 60 + Math.floor(Math.random() * 30); // 60-90% saturation
+        const baseLightness = 45 + Math.floor(Math.random() * 20); // 45-65% lightness
+        baseColor = ColorHarmony.hslToHex(baseHue, baseSat, baseLightness);
       }
       
       let generatedColors = [];
       
-      switch(mode) {
-        case 'complementary':
-          generatedColors = ColorHarmony.generateComplementary(baseColor);
-          break;
-        case 'analogous':
-          generatedColors = ColorHarmony.generateAnalogous(baseColor);
-          break;
-        case 'split-complementary':
-          generatedColors = ColorHarmony.generateSplitComplementary(baseColor);
-          break;
-        case 'monochromatic':
-          generatedColors = ColorHarmony.generateMonochromatic(baseColor);
-          break;
-        case 'triadic':
-          generatedColors = ColorHarmony.generateTriadic(baseColor);
-          break;
-        case 'compound':
-          generatedColors = ColorHarmony.generateCompound(baseColor);
-          break;
-        case 'shades':
-          generatedColors = ColorHarmony.generateShades(baseColor);
-          break;
-      }
-      
-      colours.forEach((colour, index) => {
-        if (generatedColors[index]) {
-          colour.setSpecificHex(generatedColors[index]);
+      try {
+        switch(mode) {
+          case 'complementary':
+            generatedColors = ColorHarmony.generateComplementary(baseColor);
+            break;
+          case 'analogous':
+            generatedColors = ColorHarmony.generateAnalogous(baseColor);
+            break;
+          case 'split-complementary':
+            generatedColors = ColorHarmony.generateSplitComplementary(baseColor);
+            break;
+          case 'monochromatic':
+            generatedColors = ColorHarmony.generateMonochromatic(baseColor);
+            break;
+          case 'triadic':
+            generatedColors = ColorHarmony.generateTriadic(baseColor);
+            break;
+          case 'compound':
+            generatedColors = ColorHarmony.generateCompound(baseColor);
+            break;
+          case 'shades':
+            generatedColors = ColorHarmony.generateShades(baseColor);
+            break;
+          default:
+            // Fallback to random if mode is unrecognized
+            colours.forEach(colour => colour.generateHex());
+            generatePalette.isGenerating = false;
+            return;
         }
-      });
+        
+        // Validate generated colors and apply them
+        colours.forEach((colour, index) => {
+          if (generatedColors[index] && /^#[0-9A-Fa-f]{6}$/i.test(generatedColors[index])) {
+            colour.setSpecificHex(generatedColors[index]);
+          } else {
+            // Fallback to random color if generated color is invalid
+            colour.generateHex();
+          }
+        });
+      } catch (error) {
+        console.error('Error generating color harmony:', error);
+        // Fallback to random generation
+        colours.forEach(colour => colour.generateHex());
+      }
     }
     
     generatePalette.isGenerating = false;
