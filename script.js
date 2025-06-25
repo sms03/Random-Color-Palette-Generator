@@ -55,7 +55,11 @@ class Colour {
 
   generateHex() {
     if (this.locked) return;
-    const hex = '#' + Array.from({length:6},()=>Math.floor(Math.random()*16).toString(16)).join('').toUpperCase();
+    // Generate RGB values from 0-255 and convert to hex
+    const r = Math.floor(Math.random() * 256);
+    const g = Math.floor(Math.random() * 256);
+    const b = Math.floor(Math.random() * 256);
+    const hex = '#' + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join('').toUpperCase();
     this.setHex(hex);
   }
 
@@ -105,29 +109,27 @@ class Colour {
 }
 
 class ColorHarmony {
-  static hslToHex(h, s, l) {
-    // Normalize values
-    h = ((h % 360) + 360) % 360; // Ensure h is between 0-360
-    s = Math.max(0, Math.min(100, s)); // Clamp s between 0-100
-    l = Math.max(0, Math.min(100, l)); // Clamp l between 0-100
-    
-    l /= 100;
-    const a = s * Math.min(l, 1 - l) / 100;
-    const f = n => {
-      const k = (n + h / 30) % 12;
-      const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
-      return Math.round(255 * color).toString(16).padStart(2, '0');
-    };
-    return `#${f(0)}${f(8)}${f(4)}`.toUpperCase();
+  static rgbToHex(r, g, b) {
+    // Clamp RGB values to 0-255 range
+    r = Math.max(0, Math.min(255, Math.round(r)));
+    g = Math.max(0, Math.min(255, Math.round(g)));
+    b = Math.max(0, Math.min(255, Math.round(b)));
+    return '#' + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join('').toUpperCase();
   }
 
-  static hexToHsl(hex) {
-    // Remove # if present
+  static hexToRgb(hex) {
     hex = hex.replace('#', '');
-    
-    const r = parseInt(hex.slice(0, 2), 16) / 255;
-    const g = parseInt(hex.slice(2, 4), 16) / 255;
-    const b = parseInt(hex.slice(4, 6), 16) / 255;
+    return [
+      parseInt(hex.slice(0, 2), 16),
+      parseInt(hex.slice(2, 4), 16),
+      parseInt(hex.slice(4, 6), 16)
+    ];
+  }
+
+  static rgbToHsl(r, g, b) {
+    r /= 255;
+    g /= 255;
+    b /= 255;
 
     const max = Math.max(r, g, b);
     const min = Math.min(r, g, b);
@@ -147,6 +149,49 @@ class ColorHarmony {
     }
 
     return [Math.round(h * 360), Math.round(s * 100), Math.round(l * 100)];
+  }
+
+  static hslToRgb(h, s, l) {
+    // Normalize values
+    h = ((h % 360) + 360) % 360; // Ensure h is between 0-360
+    s = Math.max(0, Math.min(100, s)) / 100; // Clamp s between 0-1
+    l = Math.max(0, Math.min(100, l)) / 100; // Clamp l between 0-1
+
+    const c = (1 - Math.abs(2 * l - 1)) * s;
+    const x = c * (1 - Math.abs((h / 60) % 2 - 1));
+    const m = l - c / 2;
+    let r, g, b;
+
+    if (0 <= h && h < 60) {
+      r = c; g = x; b = 0;
+    } else if (60 <= h && h < 120) {
+      r = x; g = c; b = 0;
+    } else if (120 <= h && h < 180) {
+      r = 0; g = c; b = x;
+    } else if (180 <= h && h < 240) {
+      r = 0; g = x; b = c;
+    } else if (240 <= h && h < 300) {
+      r = x; g = 0; b = c;
+    } else if (300 <= h && h < 360) {
+      r = c; g = 0; b = x;
+    }
+
+    // Convert to 0-255 range
+    return [
+      Math.round((r + m) * 255),
+      Math.round((g + m) * 255),
+      Math.round((b + m) * 255)
+    ];
+  }
+
+  static hslToHex(h, s, l) {
+    const [r, g, b] = this.hslToRgb(h, s, l);
+    return this.rgbToHex(r, g, b);
+  }
+
+  static hexToHsl(hex) {
+    const [r, g, b] = this.hexToRgb(hex);
+    return this.rgbToHsl(r, g, b);
   }
 
   static generateComplementary(baseHex) {
@@ -248,11 +293,11 @@ function generatePalette() {
       // Find the first unlocked color or generate a base color
       let baseColor = colours.find(c => !c.locked)?.hex;
       if (!baseColor || !/^#[0-9A-Fa-f]{6}$/.test(baseColor)) {
-        // Generate a vibrant base color with good saturation and lightness
-        const baseHue = Math.floor(Math.random() * 360);
-        const baseSat = 60 + Math.floor(Math.random() * 30); // 60-90% saturation
-        const baseLightness = 45 + Math.floor(Math.random() * 20); // 45-65% lightness
-        baseColor = ColorHarmony.hslToHex(baseHue, baseSat, baseLightness);
+        // Generate a vibrant base color with RGB values from 0-255
+        const r = Math.floor(Math.random() * 256);
+        const g = Math.floor(Math.random() * 256);
+        const b = Math.floor(Math.random() * 256);
+        baseColor = ColorHarmony.rgbToHex(r, g, b);
       }
       
       let generatedColors = [];
