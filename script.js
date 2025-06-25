@@ -8,26 +8,35 @@ class Colour {
     this.copyBtn = element.querySelector('.copy-hex');
     this.img = this.lockBtn.querySelector('img');
     this.lockStatus = element.querySelector('.lock-status');
-    this.setHex(hex);
-    this.setLocked(false);
+    this.preview = element.querySelector('.colour-preview');
+    
     this.addListeners();
+    this.setLocked(false);
+    this.setHex(hex);
   }
 
   setHex(hex) {
     if (!/^#[0-9A-Fa-f]{6}$/.test(hex)) return;
     this.hex = hex.toUpperCase();
     
-    // Batch DOM updates to prevent glitching
-    this.element.style.backgroundColor = this.hex;
+    // Update the color preview element
+    if (this.preview) {
+      this.preview.style.backgroundColor = this.hex;
+    } else {
+      // Fallback for older structure
+      this.element.style.backgroundColor = this.hex;
+    }
     
     // Use a more reliable method to update text without glitching
     const updateInput = () => {
-      if (this.input.value !== this.hex) {
+      if (this.input && this.input.value !== this.hex) {
         this.input.value = this.hex;
       }
       // Always use white text with dark background for maximum visibility
-      this.input.style.color = '#ffffff';
-      this.input.style.background = 'rgba(35, 35, 54, 0.95)';
+      if (this.input) {
+        this.input.style.color = '#ffffff';
+        this.input.style.background = 'rgba(35, 35, 54, 0.95)';
+      }
     };
     
     // Use setTimeout to ensure smooth updates
@@ -38,7 +47,7 @@ class Colour {
     this.locked = locked;
     this.lockBtn.classList.toggle('is-locked', locked);
     this.element.classList.toggle('locked', locked);
-    this.img.src = locked ? 'icons/lock-closed.svg' : 'icons/lock-open.svg';
+    this.img.src = locked ? 'Icons/lock-closed.svg' : 'Icons/lock-open.svg';
     this.lockBtn.setAttribute('aria-label', locked ? 'Unlock color' : 'Lock color');
     this.lockBtn.title = locked ? 'Unlock color' : 'Lock color';
     this.input.readOnly = locked;
@@ -290,7 +299,11 @@ class ColorHarmony {
 }
 
 const colourElements = document.querySelectorAll('.colours .colour');
-const colours = Array.from(colourElements).map(el => new Colour('#000000', el));
+const colours = Array.from(colourElements).map((el, index) => {
+  // Start with different colors instead of all black
+  const initialColors = ['#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899'];
+  return new Colour(initialColors[index] || '#3B82F6', el);
+});
 const colorModeSelect = document.getElementById('color-mode');
 
 function generatePalette() {
@@ -377,12 +390,258 @@ function generatePalette() {
   }, 50);
 }
 
-document.querySelector('.generator-button').addEventListener('click', generatePalette);
-document.addEventListener('keydown', e => {
-  if (e.code === 'Space' && !e.repeat) {
-    e.preventDefault();
-    generatePalette();
+// Enhanced UI Interactions and Keyboard Shortcuts
+document.addEventListener('keydown', (e) => {
+  // Prevent actions when user is typing in input field
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+  
+  switch (e.code) {
+    case 'Space':
+      if (!e.repeat) {
+        e.preventDefault();
+        generatePaletteWithFeedback();
+      }
+      break;
+    case 'KeyC':
+      if (e.ctrlKey || e.metaKey) {
+        e.preventDefault();
+        copyAllColors();
+      }
+      break;
+    case 'KeyL':
+      e.preventDefault();
+      toggleRandomLock();
+      break;
+    case 'KeyR':
+      e.preventDefault();
+      resetAllLocks();
+      break;
+    case 'Escape':
+      clearAllFocus();
+      break;
   }
 });
 
+// Enhanced generate function with visual feedback
+function generatePaletteWithFeedback() {
+  const button = document.querySelector('.generator-button');
+  button.classList.add('loading');
+  
+  // Add a slight delay for better UX
+  setTimeout(() => {
+    generatePalette();
+    button.classList.remove('loading');
+  }, 150);
+}
+
+// Copy all color hex codes to clipboard
+function copyAllColors() {
+  const hexCodes = colours.map(colour => colour.hex).join(', ');
+  navigator.clipboard.writeText(hexCodes).then(() => {
+    showNotification('All colors copied to clipboard!', 'success');
+  }).catch(() => {
+    showNotification('Failed to copy colors', 'error');
+  });
+}
+
+// Toggle lock on a random unlocked color
+function toggleRandomLock() {
+  const unlockedColors = colours.filter(colour => !colour.locked);
+  if (unlockedColors.length > 0) {
+    const randomColor = unlockedColors[Math.floor(Math.random() * unlockedColors.length)];
+    randomColor.toggleLocked();
+    showNotification(`Color ${randomColor.hex} ${randomColor.locked ? 'locked' : 'unlocked'}`, 'info');
+  }
+}
+
+// Reset all locks
+function resetAllLocks() {
+  colours.forEach(colour => {
+    if (colour.locked) {
+      colour.setLocked(false);
+    }
+  });
+  showNotification('All colors unlocked', 'info');
+}
+
+// Clear focus from all elements
+function clearAllFocus() {
+  document.activeElement.blur();
+}
+
+// Notification system
+function showNotification(message, type = 'info') {
+  // Remove existing notification
+  const existingNotification = document.querySelector('.notification');
+  if (existingNotification) {
+    existingNotification.remove();
+  }
+
+  // Create notification element
+  const notification = document.createElement('div');
+  notification.className = `notification notification-${type}`;
+  notification.textContent = message;
+  
+  // Add styles
+  Object.assign(notification.style, {
+    position: 'fixed',
+    top: '20px',
+    right: '20px',
+    padding: '12px 20px',
+    borderRadius: '8px',
+    color: 'white',
+    fontWeight: '600',
+    fontSize: '14px',
+    zIndex: '10000',
+    transform: 'translateX(100%)',
+    opacity: '0',
+    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+    backdropFilter: 'blur(8px)',
+    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)'
+  });
+
+  // Set background color based on type
+  const backgrounds = {
+    success: 'linear-gradient(135deg, #10b981, #22d3ee)',
+    error: 'linear-gradient(135deg, #ef4444, #f97316)',
+    info: 'linear-gradient(135deg, #8b5cf6, #a78bfa)'
+  };
+  notification.style.background = backgrounds[type] || backgrounds.info;
+
+  document.body.appendChild(notification);
+
+  // Animate in
+  requestAnimationFrame(() => {
+    notification.style.transform = 'translateX(0)';
+    notification.style.opacity = '1';
+  });
+
+  // Remove after 3 seconds
+  setTimeout(() => {
+    notification.style.transform = 'translateX(100%)';
+    notification.style.opacity = '0';
+    setTimeout(() => notification.remove(), 300);
+  }, 3000);
+}
+
+// Enhanced color card interactions
+colours.forEach((colour, index) => {
+  const element = colour.element;
+  const preview = element.querySelector('.colour-preview');
+  
+  if (preview) {
+    // Add number indicator
+    const numberIndicator = document.createElement('div');
+    numberIndicator.className = 'color-number';
+    numberIndicator.textContent = index + 1;
+    Object.assign(numberIndicator.style, {
+      position: 'absolute',
+      top: '8px',
+      right: '8px',
+      width: '24px',
+      height: '24px',
+      borderRadius: '50%',
+      background: 'rgba(0, 0, 0, 0.7)',
+      color: 'white',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      fontSize: '12px',
+      fontWeight: '600',
+      zIndex: '2',
+      opacity: '0.8'
+    });
+    
+    preview.style.position = 'relative';
+    preview.appendChild(numberIndicator);
+    
+    // Add click to copy functionality to the color preview
+    preview.addEventListener('click', () => {
+      colour.copyToClipboard();
+    });
+    
+    // Add hover effects for better interactivity
+    element.addEventListener('mouseenter', () => {
+      numberIndicator.style.opacity = '1';
+      numberIndicator.style.transform = 'scale(1.1)';
+    });
+    
+    element.addEventListener('mouseleave', () => {
+      numberIndicator.style.opacity = '0.8';
+      numberIndicator.style.transform = 'scale(1)';
+    });
+  }
+});
+
+// Add loading states and error handling for color mode changes
+const colorModeSelectElement = document.getElementById('color-mode');
+colorModeSelectElement.addEventListener('change', (e) => {
+  showNotification(`Switched to ${e.target.options[e.target.selectedIndex].text} mode`, 'info');
+  generatePaletteWithFeedback();
+});
+
+// Add help tooltip
+function createHelpTooltip() {
+  const helpButton = document.createElement('button');
+  helpButton.innerHTML = '?';
+  helpButton.className = 'help-button';
+  Object.assign(helpButton.style, {
+    position: 'fixed',
+    bottom: '20px',
+    right: '20px',
+    width: '40px',
+    height: '40px',
+    borderRadius: '50%',
+    background: 'var(--accent)',
+    color: 'white',
+    border: 'none',
+    fontSize: '18px',
+    fontWeight: 'bold',
+    cursor: 'pointer',
+    zIndex: '1000',
+    transition: 'all 0.3s ease',
+    boxShadow: '0 4px 16px rgba(139, 92, 246, 0.3)'
+  });
+
+  helpButton.addEventListener('click', () => {
+    const helpText = `Keyboard Shortcuts:
+• Space - Generate new palette
+• L - Lock/unlock random color
+• R - Reset all locks
+• Ctrl/Cmd + C - Copy all colors
+• Esc - Clear focus
+
+Tips:
+• Click color preview to copy
+• Lock colors to keep them
+• Try different harmony modes`;
+    
+    showNotification(helpText, 'info');
+  });
+
+  helpButton.addEventListener('mouseenter', () => {
+    helpButton.style.transform = 'scale(1.1)';
+    helpButton.style.boxShadow = '0 6px 20px rgba(139, 92, 246, 0.4)';
+  });
+
+  helpButton.addEventListener('mouseleave', () => {
+    helpButton.style.transform = 'scale(1)';
+    helpButton.style.boxShadow = '0 4px 16px rgba(139, 92, 246, 0.3)';
+  });
+
+  document.body.appendChild(helpButton);
+}
+
+// Initialize enhanced features
+createHelpTooltip();
+
+// Generate initial palette and show welcome notification
 generatePalette();
+
+// Show welcome notification after a delay
+setTimeout(() => {
+  showNotification('Welcome! Press ? for keyboard shortcuts', 'info');
+}, 1500);
+
+// Add event listeners for the main functionality
+document.querySelector('.generator-button').addEventListener('click', generatePaletteWithFeedback);
