@@ -201,6 +201,8 @@ class ColorHarmony {
     return [
       baseHex,
       this.hslToHex(complementHue, s, l),
+      this.hslToHex((h + 30) % 360, Math.max(40, s - 10), Math.min(80, l + 5)),
+      this.hslToHex((complementHue + 30) % 360, Math.max(40, s - 10), Math.min(80, l + 5)),
       this.hslToHex(h, Math.max(30, s - 15), Math.min(80, l + 10)),
       this.hslToHex(complementHue, Math.max(30, s - 15), Math.min(80, l + 10))
     ];
@@ -210,10 +212,12 @@ class ColorHarmony {
     const [h, s, l] = this.hexToHsl(baseHex);
     
     return [
-      this.hslToHex((h - 30 + 360) % 360, s, l),
-      this.hslToHex((h - 15 + 360) % 360, s, l),
+      this.hslToHex((h - 40 + 360) % 360, s, l),
+      this.hslToHex((h - 20 + 360) % 360, s, l),
       baseHex,
-      this.hslToHex((h + 30) % 360, s, l)
+      this.hslToHex((h + 20) % 360, s, l),
+      this.hslToHex((h + 40) % 360, s, l),
+      this.hslToHex((h + 60) % 360, s, l)
     ];
   }
 
@@ -225,6 +229,8 @@ class ColorHarmony {
       baseHex,
       this.hslToHex((complement - 30 + 360) % 360, s, l),
       this.hslToHex((complement + 30) % 360, s, l),
+      this.hslToHex((h + 30) % 360, Math.max(35, s - 10), Math.max(25, l - 5)),
+      this.hslToHex((h - 30 + 360) % 360, Math.max(35, s - 10), Math.max(25, l - 5)),
       this.hslToHex(h, Math.max(20, s - 20), Math.max(20, l - 15))
     ];
   }
@@ -233,10 +239,12 @@ class ColorHarmony {
     const [h, s, l] = this.hexToHsl(baseHex);
     
     return [
-      this.hslToHex(h, s, Math.min(85, l + 25)),
-      this.hslToHex(h, s, Math.min(75, l + 15)),
+      this.hslToHex(h, s, Math.min(90, l + 30)),
+      this.hslToHex(h, s, Math.min(80, l + 20)),
+      this.hslToHex(h, s, Math.min(70, l + 10)),
       baseHex,
-      this.hslToHex(h, s, Math.max(15, l - 20))
+      this.hslToHex(h, s, Math.max(20, l - 15)),
+      this.hslToHex(h, s, Math.max(10, l - 25))
     ];
   }
 
@@ -247,7 +255,9 @@ class ColorHarmony {
       baseHex,
       this.hslToHex((h + 120) % 360, s, l),
       this.hslToHex((h + 240) % 360, s, l),
-      this.hslToHex(h, Math.max(25, s - 15), Math.max(25, l - 10))
+      this.hslToHex((h + 60) % 360, Math.max(30, s - 10), Math.max(25, l - 5)),
+      this.hslToHex((h + 180) % 360, Math.max(30, s - 10), Math.max(25, l - 5)),
+      this.hslToHex((h + 300) % 360, Math.max(30, s - 10), Math.max(25, l - 5))
     ];
   }
 
@@ -258,8 +268,10 @@ class ColorHarmony {
     return [
       baseHex,
       this.hslToHex((h + 30) % 360, s, l),
+      this.hslToHex((h + 60) % 360, s, l),
       this.hslToHex(complement, s, l),
-      this.hslToHex((complement + 30) % 360, s, l)
+      this.hslToHex((complement + 30) % 360, s, l),
+      this.hslToHex((complement + 60) % 360, s, l)
     ];
   }
 
@@ -267,10 +279,12 @@ class ColorHarmony {
     const [h, s, l] = this.hexToHsl(baseHex);
     
     return [
-      this.hslToHex(h, s, Math.min(90, l + 35)),
-      this.hslToHex(h, s, Math.min(80, l + 20)),
+      this.hslToHex(h, s, Math.min(95, l + 40)),
+      this.hslToHex(h, s, Math.min(85, l + 25)),
+      this.hslToHex(h, s, Math.min(75, l + 15)),
       baseHex,
-      this.hslToHex(h, s, Math.max(10, l - 25))
+      this.hslToHex(h, s, Math.max(15, l - 20)),
+      this.hslToHex(h, s, Math.max(5, l - 35))
     ];
   }
 }
@@ -330,6 +344,17 @@ function generatePalette() {
             colours.forEach(colour => colour.generateHex());
             generatePalette.isGenerating = false;
             return;
+        }
+        
+        // Ensure we have 6 colors, fill with variations if needed
+        while (generatedColors.length < 6) {
+          const [h, s, l] = ColorHarmony.hexToHsl(baseColor);
+          const variation = ColorHarmony.hslToHex(
+            (h + Math.random() * 60 - 30 + 360) % 360,
+            Math.max(20, Math.min(90, s + Math.random() * 40 - 20)),
+            Math.max(10, Math.min(90, l + Math.random() * 40 - 20))
+          );
+          generatedColors.push(variation);
         }
         
         // Validate generated colors and apply them
